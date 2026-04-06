@@ -1,10 +1,18 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Trash2, Check, X } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { Bell, Trash2, Check } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchNotifications, markNotificationAsRead, clearNotifications } from '../../redux/slices/notificationSlice';
 
 const NotificationDropdown = ({ isOpen, onClose }) => {
-  const { notifications, markAsRead, clearNotifications, unreadCount } = useApp();
+  const dispatch = useDispatch();
+  const { notifications, unreadCount } = useSelector((state) => state.notifications);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      dispatch(fetchNotifications());
+    }
+  }, [dispatch, isOpen]);
 
   return (
     <AnimatePresence>
@@ -26,7 +34,7 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
                   <p className="text-[10px] font-bold text-purple-600 uppercase tracking-[0.2em] mt-2 italic leading-none">{unreadCount} UNREAD ALERTS</p>
                </div>
                <button 
-                 onClick={clearNotifications}
+                 onClick={() => dispatch(clearNotifications())}
                  className="p-2 hover:bg-rose-50 text-zinc-400 hover:text-rose-500 rounded-xl transition-all"
                  title="Clear All"
                >
@@ -39,23 +47,22 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
                {notifications.length > 0 ? (
                  notifications.slice().reverse().map((n) => (
                    <div 
-                     key={n.id} 
-                     onClick={() => markAsRead(n.id)}
-                     className={`px-8 py-6 border-b border-zinc-50 hover:bg-zinc-50 transition-all cursor-pointer relative group ${!n.read ? 'bg-purple-50/20' : ''}`}
+                     key={n._id} 
+                     onClick={() => dispatch(markNotificationAsRead(n._id))}
+                     className={`px-8 py-6 border-b border-zinc-50 hover:bg-zinc-50 transition-all cursor-pointer relative group ${!n.isRead ? 'bg-purple-50/20' : ''}`}
                    >
-                      {!n.read && (
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-purple-600 rounded-full"></div>
+                      {!n.isRead && (
+                         <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-purple-600 rounded-full"></div>
                       )}
                       
                       <div className="flex justify-between items-start mb-2">
                          <span className="text-[10px] font-black text-purple-600 uppercase tracking-tighter italic leading-none">{n.type}</span>
-                         <span className="text-[9px] font-bold text-zinc-400 uppercase leading-none">{n.time}</span>
+                         <span className="text-[9px] font-bold text-zinc-400 uppercase leading-none">{new Date(n.createdAt).toLocaleTimeString()}</span>
                       </div>
                       
-                      <h4 className={`text-xs font-black uppercase tracking-tight leading-tight mb-1 ${n.read ? 'text-zinc-500' : 'text-zinc-900'}`}>{n.title}</h4>
-                      <p className="text-[10px] font-medium text-zinc-400 leading-relaxed">{n.message}</p>
+                      <h4 className={`text-xs font-black uppercase tracking-tight leading-tight mb-1 ${n.isRead ? 'text-zinc-500' : 'text-zinc-900'}`}>{n.message}</h4>
                       
-                      {!n.read && (
+                      {!n.isRead && (
                         <button className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-2 bg-white rounded-lg shadow-sm border border-zinc-100 text-purple-600 transition-all">
                            <Check size={12} />
                         </button>

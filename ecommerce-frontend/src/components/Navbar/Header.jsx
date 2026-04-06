@@ -3,12 +3,18 @@ import TopBar from './TopBar';
 import MainNavbar from './MainNavbar';
 import CategoryMenu from './CategoryMenu';
 import { Drawer, List, ListItem, ListItemText, IconButton, Divider, Badge } from '@mui/material';
-import { FaBars, FaTimes, FaShoppingCart, FaUser, FaHeart, FaHome, FaGripHorizontal, FaStore, FaTag, FaInfoCircle, FaEnvelope } from 'react-icons/fa';
-import { Link, NavLink } from 'react-router-dom';
+import { FaBars, FaTimes, FaShoppingCart, FaUser, FaHeart, FaHome, FaGripHorizontal, FaStore, FaTag, FaInfoCircle, FaEnvelope, FaSignOutAlt } from 'react-icons/fa';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../../redux/slices/authSlice';
+import toast from 'react-hot-toast';
 
 const Header = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +29,17 @@ const Header = () => {
       return;
     }
     setMobileMenuOpen(open);
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setMobileMenuOpen(false);
+    toast.success('Logged out successfully');
+    navigate('/');
+  };
+
+  const getInitials = (name) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
   const mobileNavLinks = [
@@ -53,13 +70,19 @@ const Header = () => {
 
            <div className="flex items-center gap-2">
               <Link to="/cart">
-                <Badge badgeContent={2} color="secondary" sx={{ '& .MuiBadge-badge': { backgroundColor: '#a855f7' } }}>
-                  <FaShoppingCart className="text-zinc-600 text-lg" />
-                </Badge>
+                 <Badge badgeContent={0} color="secondary" sx={{ '& .MuiBadge-badge': { backgroundColor: '#a855f7' } }}>
+                   <FaShoppingCart className="text-zinc-600 text-lg" />
+                 </Badge>
               </Link>
-              <Link to="/profile">
+              <Link to={user ? "/profile" : "/login"}>
                 <IconButton size="small">
-                  <FaUser className="text-zinc-600 text-sm" />
+                  {user ? (
+                    <div className="w-7 h-7 bg-purple-600 rounded-full flex items-center justify-center text-white text-[10px] font-black">
+                       {getInitials(user.fullName)}
+                    </div>
+                  ) : (
+                    <FaUser className="text-zinc-600 text-sm" />
+                  )}
                 </IconButton>
               </Link>
            </div>
@@ -90,6 +113,7 @@ const Header = () => {
         }}
       >
         <div className="p-6 h-full flex flex-col no-scrollbar overflow-y-auto">
+          {/* Drawer Header */}
           <div className="flex items-center justify-between mb-8">
             <Link to="/" onClick={toggleDrawer(false)} className="flex items-center">
               <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-black text-sm">SV</div>
@@ -100,22 +124,35 @@ const Header = () => {
             </IconButton>
           </div>
 
-          <div className="flex flex-col gap-3 mb-8">
-             <Link 
-               to="/login" 
-               onClick={toggleDrawer(false)} 
-               className="w-full bg-zinc-950 text-white font-black py-4 rounded-2xl text-center uppercase tracking-widest text-[10px] shadow-lg active:scale-95 transition-transform"
-             >
-               Sign In
-             </Link>
-             <Link 
-               to="/signup" 
-               onClick={toggleDrawer(false)} 
-               className="w-full border border-zinc-200 text-zinc-950 font-black py-4 rounded-2xl text-center uppercase tracking-widest text-[10px] hover:border-purple-600 hover:text-purple-600 active:scale-95 transition-all"
-             >
-               Create Account
-             </Link>
-          </div>
+          {/* User Profile Section in Drawer */}
+          {user ? (
+            <div className="bg-zinc-50 rounded-3xl p-5 mb-8 border border-zinc-100 flex items-center gap-4">
+               <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white text-sm font-black shadow-lg shadow-purple-100">
+                  {getInitials(user.fullName)}
+               </div>
+               <div className="text-left">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic">Welcome back,</p>
+                  <p className="text-xs font-black text-zinc-900 truncate uppercase tracking-widest">{user.fullName}</p>
+               </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 mb-8">
+               <Link 
+                 to="/login" 
+                 onClick={toggleDrawer(false)} 
+                 className="w-full bg-zinc-950 text-white font-black py-4 rounded-2xl text-center uppercase tracking-widest text-[10px] shadow-lg active:scale-95 transition-transform"
+               >
+                 Sign In
+               </Link>
+               <Link 
+                 to="/signup" 
+                 onClick={toggleDrawer(false)} 
+                 className="w-full border border-zinc-200 text-zinc-950 font-black py-4 rounded-2xl text-center uppercase tracking-widest text-[10px] hover:border-purple-600 hover:text-purple-600 active:scale-95 transition-all"
+               >
+                 Create Account
+               </Link>
+            </div>
+          )}
 
           <nav className="flex-1 text-left">
              <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2 text-left">Navigation</h3>
@@ -149,17 +186,29 @@ const Header = () => {
                    <span className="text-[10px] font-black text-zinc-800">Favorite</span>
                 </Link>
              </div>
+
+             {user && (
+               <>
+                 <button 
+                   onClick={handleLogout}
+                   className="w-full mt-6 flex items-center gap-4 px-5 py-4 rounded-2xl bg-rose-50 text-rose-500 border border-rose-100 hover:bg-rose-100 transition-all group active:scale-95"
+                 >
+                    <FaSignOutAlt className="group-hover:translate-x-1 transition-transform" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Sign Out Account</span>
+                 </button>
+               </>
+             )}
           </nav>
 
-          <div className="mt-8 pt-6 border-t border-zinc-100 flex justify-between items-center bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl">
+          <footer className="mt-8 pt-6 border-t border-zinc-100 flex justify-between items-center bg-gradient-to-r from-purple-50 to-emerald-50 p-4 rounded-2xl">
               <div className="text-left">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase">Support Line</p>
-                <p className="text-xs font-black text-zinc-900">+91 98765 43210</p>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase leading-none mb-1">Luxury Concierge</p>
+                <p className="text-xs font-black text-zinc-900">+91 9988 7766 55</p>
               </div>
-              <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white">
-                <FaHome className="text-xs" />
+              <div className="w-8 h-8 bg-zinc-950 rounded-full flex items-center justify-center text-white">
+                <FaEnvelope className="text-[10px]" />
               </div>
-          </div>
+          </footer>
         </div>
       </Drawer>
     </header>

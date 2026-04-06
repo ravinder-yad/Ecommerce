@@ -1,18 +1,57 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingBag, Trash2, ArrowLeft } from 'lucide-react';
+import { Heart, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchWishlist } from '../redux/slices/wishlistSlice';
 import WishlistCard from '../components/Wishlist/WishlistCard';
 
-const WishlistPage = () => {
-  const { wishlist, setWishlist } = useApp();
+const WishlistPage = ({ isTab = false }) => {
+  const dispatch = useDispatch();
+  const { wishlistItems, isLoading } = useSelector((state) => state.wishlist);
+  const { token } = useSelector((state) => state.auth);
 
-  const clearWishlist = () => {
-    // In a real app, this would be a method in AppContext
-    // For now, I'll just use the setter if available, or I'll add the method to AppContext next.
-    // Wait, I'll add the method to AppContext first to be clean.
-  };
+  React.useEffect(() => {
+    if (token) {
+      dispatch(fetchWishlist());
+    }
+  }, [dispatch, token]);
+
+  const wishlist = wishlistItems;
+
+  const WishlistContent = (
+    <div className="text-left w-full">
+      {wishlist.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+           <AnimatePresence>
+              {wishlist.map((item) => (
+                <WishlistCard key={item.id} product={item} />
+              ))}
+           </AnimatePresence>
+        </div>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white border border-zinc-100 rounded-[32px] p-16 text-center shadow-sm"
+        >
+           <div className="w-20 h-20 bg-zinc-50 rounded-[32px] flex items-center justify-center text-zinc-100 mx-auto mb-6">
+              <Heart size={32} fill="currentColor" />
+           </div>
+           <h4 className="text-[11px] font-black uppercase tracking-widest text-zinc-950 mb-2 font-sans italic">Your curation is empty.</h4>
+           <p className="text-[10px] text-zinc-400 font-medium tracking-tight mb-8">Tap the heart on items you love to save them here.</p>
+           <Link 
+             to="/shop" 
+             className="inline-flex items-center gap-4 bg-zinc-950 text-white font-black px-8 py-4 rounded-2xl hover:bg-purple-600 transition-all uppercase tracking-widest text-[9px] shadow-lg group"
+           >
+              Explore Collection <ShoppingBag size={14} className="group-hover:scale-110 transition-transform" />
+           </Link>
+        </motion.div>
+      )}
+    </div>
+  );
+
+  if (isTab) return WishlistContent;
 
   return (
     <div className="bg-white min-h-screen pt-12 pb-32">
@@ -39,35 +78,7 @@ const WishlistPage = () => {
         </div>
 
         {/* Wishlist Content */}
-        {wishlist.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-             <AnimatePresence>
-                {wishlist.map((item) => (
-                  <WishlistCard key={item.id} product={item} />
-                ))}
-             </AnimatePresence>
-          </div>
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="py-32 text-center max-w-lg mx-auto"
-          >
-             <div className="w-24 h-24 bg-zinc-50 rounded-[40px] flex items-center justify-center text-zinc-200 mx-auto mb-8 shadow-inner border border-zinc-100">
-                <Heart size={40} fill="currentColor" />
-             </div>
-             <h2 className="text-3xl font-black text-zinc-900 uppercase italic tracking-tighter mb-4">Your wishlist is empty.</h2>
-             <p className="text-zinc-500 font-medium leading-relaxed mb-10">
-                You haven't saved any items yet. Browse our collections and tap the heart icon to save your favorites here.
-             </p>
-             <Link 
-               to="/shop" 
-               className="inline-flex items-center gap-4 bg-zinc-950 text-white font-black px-12 py-5 rounded-[28px] hover:bg-purple-600 transition-all uppercase tracking-widest text-[10px] shadow-2xl group"
-             >
-                Start Exploring <ShoppingBag size={16} className="group-hover:scale-110 transition-transform" />
-             </Link>
-          </motion.div>
-        )}
+        {WishlistContent}
 
       </div>
     </div>

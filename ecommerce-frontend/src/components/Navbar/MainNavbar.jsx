@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
-import { FaHeart, FaShoppingCart, FaUser, FaBell } from 'react-icons/fa';
+import { FaHeart, FaShoppingCart, FaBell } from 'react-icons/fa';
 import Badge from '@mui/material/Badge';
 import SearchBar from './SearchBar';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { useSelector } from 'react-redux';
+import AuthButtons from './AuthButtons';
+import ProfileMenu from './ProfileMenu';
 import NotificationDropdown from './NotificationDropdown';
 
 const MainNavbar = () => {
-  const { cartCount, wishlist, unreadCount } = useApp();
+  const { cartItems } = useSelector((state) => state.cart);
+  const { wishlistItems } = useSelector((state) => state.wishlist);
+  const { unreadCount } = useSelector((state) => state.notifications);
+  const { user } = useSelector((state) => state.auth);
   const [showNotifications, setShowNotifications] = useState(false);
 
   return (
     <div className="bg-white border-b border-zinc-200 py-4 px-4 md:px-8 flex justify-between items-center sticky top-0 z-[100] transition-all duration-300">
       {/* Left: Logo */}
-      <Link to="/" className="flex items-center group cursor-pointer">
+      <Link to="/" className="flex items-center group cursor-pointer shrink-0">
         <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-purple-200 group-hover:scale-110 transition-transform duration-300 group-hover:rotate-6">
           SV
         </div>
@@ -30,8 +36,8 @@ const MainNavbar = () => {
         <SearchBar />
       </div>
 
-      {/* Right: Icons */}
-      <div className="flex items-center gap-2 md:gap-6 relative">
+      {/* Right: Icons & Auth */}
+      <div className="flex items-center gap-2 md:gap-5 relative">
         {/* Notification Bell */}
         <div className="relative">
            <button 
@@ -57,10 +63,10 @@ const MainNavbar = () => {
         {/* Wishlist Link */}
         <Link to="/wishlist" className="hover:bg-zinc-100 p-2.5 rounded-full cursor-pointer transition-all hover:scale-110 active:scale-95 group hidden sm:flex">
           <Badge 
-            badgeContent={wishlist.length} 
+            badgeContent={wishlistItems.length} 
             color="error" 
             overlap="circular"
-            sx={{ '& .MuiBadge-badge': { backgroundColor: wishlist.length > 0 ? '#f43f5e' : 'transparent', color: 'white', fontSize: '10px', height: '16px', minWidth: '16px' } }}
+            sx={{ '& .MuiBadge-badge': { backgroundColor: wishlistItems.length > 0 ? '#f43f5e' : 'transparent', color: 'white', fontSize: '10px', height: '16px', minWidth: '16px' } }}
           >
             <FaHeart className="text-zinc-600 text-xl group-hover:text-rose-500 transition-colors" />
           </Badge>
@@ -69,25 +75,26 @@ const MainNavbar = () => {
         {/* Cart Link */}
         <Link to="/cart" className="hover:bg-zinc-100 p-2.5 rounded-full cursor-pointer transition-all hover:scale-110 active:scale-95 group">
            <Badge 
-             badgeContent={cartCount} 
+             badgeContent={cartItems.length} 
              color="secondary" 
              overlap="circular" 
-             sx={{ '& .MuiBadge-badge': { backgroundColor: cartCount > 0 ? '#a855f7' : 'transparent', color: 'white', fontSize: '10px', height: '16px', minWidth: '16px' } }}
+             sx={{ '& .MuiBadge-badge': { backgroundColor: cartItems.length > 0 ? '#a855f7' : 'transparent', color: 'white', fontSize: '10px', height: '16px', minWidth: '16px' } }}
            >
             <FaShoppingCart className="text-zinc-600 text-xl group-hover:text-purple-600" />
           </Badge>
         </Link>
 
-        {/* Auth Buttons */}
-        <div className="flex items-center gap-3 ml-2">
-           <Link to="/login" className="hidden md:block text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-purple-600 transition-colors">Sign In</Link>
-           <Link to="/signup" className="flex items-center border border-zinc-200 rounded-full px-5 py-2.5 gap-2 hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all hover:shadow-md group text-left">
-              <div className="w-5 h-5 bg-zinc-100 rounded-full flex items-center justify-center border border-zinc-300 group-hover:border-purple-400 group-hover:bg-white overflow-hidden">
-                 <FaUser className="text-zinc-500 text-[10px] group-hover:text-purple-600" />
-              </div>
-              <p className="text-[10px] font-black text-zinc-800 uppercase tracking-widest">Join Now</p>
-           </Link>
+        {/* --- AUTH LOGIC --- */}
+        <div className="ml-1 border-l border-zinc-100 pl-4 hidden md:block">
+           {user ? <ProfileMenu user={user} /> : <AuthButtons />}
         </div>
+        
+        {/* Mobile-only avatar toggle (Handled in Header sidebar, but shown here as quick logic if needed) */}
+        {!user && (
+           <div className="md:hidden">
+              <AuthButtons />
+           </div>
+        )}
       </div>
     </div>
   );

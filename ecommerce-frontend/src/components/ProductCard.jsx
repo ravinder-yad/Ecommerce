@@ -3,40 +3,40 @@ import { motion } from 'framer-motion';
 import { FaHeart, FaStar, FaShoppingBag, FaEye } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useApp } from '../context/AppContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { addItem } from '../redux/slices/cartSlice';
+import { addToWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice';
 
 const ProductCard = ({ product, onQuickView }) => {
-  const { addToCart, toggleWishlist, wishlist } = useApp();
+  const dispatch = useDispatch();
+  const { wishlistItems } = useSelector((state) => state.wishlist);
   
-  const isWishlisted = wishlist.some(item => item.id === product.id);
+  const isWishlisted = wishlistItems.some(item => (item._id || item.id) === (product._id || product.id));
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product);
-    toast.success(`${product.name} added to cart!`, {
-      style: {
-        borderRadius: '12px',
-        background: '#18181b',
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: '14px',
-        border: '1px solid #3f3f46',
-      },
-      iconTheme: {
-        primary: '#a855f7',
-        secondary: '#fff',
-      },
+    dispatch(addItem({
+      product: product._id || product.id,
+      name: product.name,
+      image: product.image,
+      price: product.price,
+      qty: 1
+    }));
+    toast.success(`${product.name} added to bag!`, {
+      style: { borderRadius: '12px', background: '#18181b', color: '#fff' }
     });
   };
 
   const handleToggleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleWishlist(product);
+    const productId = product._id || product.id;
     if (!isWishlisted) {
+      dispatch(addToWishlist(productId));
       toast.success('Added to wishlist!', { icon: '❤️' });
     } else {
+      dispatch(removeFromWishlist(productId));
       toast('Removed from wishlist', { icon: '💔' });
     }
   };

@@ -16,7 +16,7 @@ import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import MyOrders from './pages/MyOrders';
 import Wishlist from './pages/Wishlist';
-import SearchResults from './pages/SearchResults';
+import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 
 // Footer & Legal Pages
@@ -54,9 +54,7 @@ function App() {
           <Route path="orders" element={<MyOrders />} />
           <Route path="wishlist" element={<Wishlist />} />
           
-          <Route path="search" element={<SearchResults />} />
-          
-          {/* Footer & Information Routes */}
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="track-order" element={<OrderTracking />} />
           <Route path="faq" element={<FAQ />} />
           <Route path="size-guide" element={<SizeGuide />} />
@@ -68,7 +66,8 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AppProvider>
   );
 }
 

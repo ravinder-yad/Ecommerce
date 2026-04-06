@@ -1,10 +1,26 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Trash2, Zap } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { ShoppingCart, Trash2 } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { addItem } from '../../redux/slices/cartSlice';
+import { removeFromWishlist } from '../../redux/slices/wishlistSlice';
 
 const WishlistCard = ({ product }) => {
-  const { addToCart, removeFromWishlist } = useApp();
+  const dispatch = useDispatch();
+
+  const handleAddToCart = () => {
+    dispatch(addItem({
+      product: product._id || product.id,
+      name: product.name,
+      image: product.image,
+      price: product.price,
+      qty: 1
+    }));
+  };
+
+  const handleRemove = () => {
+    dispatch(removeFromWishlist(product._id || product.id));
+  };
 
   return (
     <motion.div
@@ -34,7 +50,7 @@ const WishlistCard = ({ product }) => {
 
         {/* Quick Actions (Remove) */}
         <button 
-          onClick={() => removeFromWishlist(product.id)}
+          onClick={handleRemove}
           className="absolute top-4 right-4 bg-white/90 backdrop-blur-md p-3 rounded-2xl text-zinc-400 hover:text-rose-500 hover:scale-110 transition-all shadow-xl opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0"
         >
           <Trash2 size={16} />
@@ -55,7 +71,7 @@ const WishlistCard = ({ product }) => {
             </div>
 
             <button 
-              onClick={() => addToCart(product)}
+              onClick={handleAddToCart}
               className="bg-zinc-900 text-white p-4 rounded-2xl hover:bg-purple-600 transition-all hover:shadow-xl active:scale-95 group"
             >
               <ShoppingCart size={18} className="group-hover:rotate-12 transition-transform" />

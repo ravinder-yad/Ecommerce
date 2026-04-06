@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser, resetStatus } from '../../redux/slices/authSlice';
+import toast from 'react-hot-toast';
 import SocialLogin from './SocialLogin';
 
 const LoginForm = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { isLoading, error, success } = useSelector((state) => state.auth);
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
 
+  // Handle Success/Error Notifications
+  useEffect(() => {
+     if (success) {
+        toast.success('Welcome back to ShopVerse!');
+        dispatch(resetStatus());
+        navigate('/'); // Redirect to Home
+     }
+     if (error) {
+        toast.error(error);
+        dispatch(resetStatus());
+     }
+  }, [success, error, navigate, dispatch]);
+
   const handleSubmit = (e) => {
      e.preventDefault();
-     console.log('Logging in with:', formData);
-     // Simulate logic
+     dispatch(loginUser(formData));
   };
 
   return (
@@ -19,7 +38,6 @@ const LoginForm = () => {
       <SocialLogin />
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Email Field */}
         <div className="space-y-2 text-left">
           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-4">Email Address</label>
           <div className="relative group">
@@ -37,7 +55,6 @@ const LoginForm = () => {
           </div>
         </div>
 
-        {/* Password Field */}
         <div className="space-y-2 text-left">
           <div className="flex items-center justify-between px-4">
              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Password</label>
@@ -72,9 +89,10 @@ const LoginForm = () => {
 
         <button 
           type="submit"
-          className="w-full bg-zinc-950 text-white font-black py-6 rounded-[28px] uppercase tracking-[0.2em] text-[10px] shadow-2xl transition-all hover:bg-purple-600 flex items-center justify-center gap-4 group active:scale-95"
+          disabled={isLoading}
+          className="w-full bg-zinc-950 text-white font-black py-6 rounded-[28px] uppercase tracking-[0.2em] text-[10px] shadow-2xl transition-all hover:bg-purple-600 flex items-center justify-center gap-4 group active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-           Login To Account <LogIn size={16} className="group-hover:translate-x-1 transition-transform" />
+           {isLoading ? 'Logging In...' : 'Login To Account'} <LogIn size={16} className={isLoading ? 'animate-pulse' : 'group-hover:translate-x-1 transition-transform'} />
         </button>
       </form>
     </div>

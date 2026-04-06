@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Eye, EyeOff, UserPlus, ShieldCheck } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { User, Mail, Lock, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { registerUser, resetStatus } from '../../redux/slices/authSlice';
+import toast from 'react-hot-toast';
 import SocialLogin from './SocialLogin';
 
 const SignupForm = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { isLoading, error, success } = useSelector((state) => state.auth);
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
-  const [passwordStrength, setPasswordStrength] = useState(0); // 0-4
+  const [passwordStrength, setPasswordStrength] = useState(0); 
 
   const checkStrength = (password) => {
      let strength = 0;
@@ -22,10 +29,26 @@ const SignupForm = () => {
      setPasswordStrength(checkStrength(formData.password));
   }, [formData.password]);
 
+  // Handle Success/Error Notifications
+  useEffect(() => {
+     if (success) {
+        toast.success(`Welcome to ShopVerse, ${formData.fullName.split(' ')[0]}! ✨`);
+        dispatch(resetStatus());
+        navigate('/dashboard'); // 🚀 Auto-login redirect to Dashboard
+     }
+     if (error) {
+        toast.error(error);
+        dispatch(resetStatus());
+     }
+  }, [success, error, navigate, dispatch]);
+
   const handleSubmit = (e) => {
      e.preventDefault();
-     console.log('Signing up with:', formData);
-     // Simulate logic
+     dispatch(registerUser({ 
+        fullName: formData.fullName, 
+        email: formData.email, 
+        password: formData.password 
+     }));
   };
 
   const strengthColors = ['bg-zinc-200', 'bg-rose-500', 'bg-orange-500', 'bg-yellow-500', 'bg-emerald-500'];
@@ -36,7 +59,6 @@ const SignupForm = () => {
       <SocialLogin />
       
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Full Name Field */}
         <div className="space-y-2 text-left">
           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-4">Full Name</label>
           <div className="relative group">
@@ -54,7 +76,6 @@ const SignupForm = () => {
           </div>
         </div>
 
-        {/* Email Field */}
         <div className="space-y-2 text-left">
           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-4">Email Address</label>
           <div className="relative group">
@@ -72,7 +93,6 @@ const SignupForm = () => {
           </div>
         </div>
 
-        {/* Password Field */}
         <div className="space-y-2 text-left">
           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-4">Create Password</label>
           <div className="relative group">
@@ -97,7 +117,6 @@ const SignupForm = () => {
           </div>
         </div>
 
-        {/* Strength Indicator */}
         <div className="flex gap-1.5 px-4 h-1">
            {[1, 2, 3, 4].map((step) => (
              <div 
@@ -110,7 +129,6 @@ const SignupForm = () => {
            Security: {strengthLabels[passwordStrength]}
         </p>
 
-        {/* Term & Privacy */}
         <div className="flex items-start gap-3 px-4 py-2">
            <input type="checkbox" required id="terms" className="w-4 h-4 rounded-md border-zinc-200 accent-purple-600 mt-0.5" />
            <label htmlFor="terms" className="text-[9px] font-black text-zinc-500 uppercase tracking-widest cursor-pointer leading-relaxed">
@@ -120,9 +138,10 @@ const SignupForm = () => {
 
         <button 
           type="submit"
-          className="w-full bg-zinc-950 text-white font-black py-5.5 rounded-[26px] uppercase tracking-[0.2em] text-[10px] shadow-2xl transition-all hover:bg-purple-600 flex items-center justify-center gap-4 group active:scale-95"
+          disabled={isLoading}
+          className="w-full bg-zinc-950 text-white font-black py-5.5 rounded-[26px] uppercase tracking-[0.2em] text-[10px] shadow-2xl transition-all hover:bg-purple-600 flex items-center justify-center gap-4 group active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-           Create VIP Account <UserPlus size={16} className="group-hover:scale-110 transition-transform" />
+           {isLoading ? 'Creating Account...' : 'Create VIP Account'} <UserPlus size={16} className={isLoading ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
         </button>
       </form>
     </div>
