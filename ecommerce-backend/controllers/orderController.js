@@ -31,6 +31,14 @@ export const addOrderItems = async (req, res) => {
       taxPrice,
       shippingPrice,
       totalPrice,
+      isPaid: true,
+      paidAt: Date.now(),
+      paymentResult: {
+        id: `TXN-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        status: 'COMPLETED',
+        update_time: new Date().toISOString(),
+        email_address: req.user.email,
+      }
     });
 
     const createdOrder = await order.save();
@@ -47,6 +55,29 @@ export const getMyOrders = async (req, res) => {
   res.json(orders);
 };
 
+// @desc    Update order to paid
+// @route   PUT /api/orders/:id/pay
+// @access  Private
+export const updateOrderToPaid = async (req, res) => {
+  const order = await Order.findById(req.params.id);
+
+  if (order) {
+    order.isPaid = true;
+    order.paidAt = Date.now();
+    order.paymentResult = {
+      id: req.body.id,
+      status: req.body.status,
+      update_time: req.body.update_time,
+      email_address: req.body.email_address,
+    };
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } else {
+    res.status(404).json({ message: 'Order not found' });
+  }
+};
+
 // @desc    Get order by ID
 // @route   GET /api/orders/:id
 // @access  Private
@@ -59,7 +90,20 @@ export const getOrderById = async (req, res) => {
   if (order) {
     res.json(order);
   } else {
-    res.status(404);
-    throw new Error('Order not found');
+    res.status(404).json({ message: 'Order not found' });
+  }
+};
+
+// @desc    Delete order
+// @route   DELETE /api/orders/:id
+// @access  Private/Admin
+export const deleteOrder = async (req, res) => {
+  const order = await Order.findById(req.params.id);
+
+  if (order) {
+    await Order.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Order successfully purged from ShopVerse Treasury' });
+  } else {
+    res.status(404).json({ message: 'Order not found' });
   }
 };

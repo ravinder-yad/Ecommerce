@@ -1,52 +1,56 @@
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import path from "path";
-import connectDB from "./config/db.js";
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import { connectDB } from './config/db.js';
+import { trackActivity } from './middleware/activityMiddleware.js';
 
-// 🛣️ Route Imports
-import authRoutes from "./routes/authRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import productRoutes from "./routes/productRoutes.js";
-import cartRoutes from "./routes/cartRoutes.js";
-import wishlistRoutes from "./routes/wishlistRoutes.js";
-import notificationRoutes from "./routes/notificationRoutes.js";
+// 🚀 Routes Imports
+import authRoutes from './routes/authRoutes.js';
+import productRoutes from './routes/productRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import wishlistRoutes from './routes/wishlistRoutes.js';
 
-// Load env
 dotenv.config();
 
-// Connect DB
+// 💂‍♂️ Initialize SQL Treasury (Professional-Grade Registry)
 connectDB();
 
-// App init
 const app = express();
+const httpServer = createServer(app);
 
-// Middleware
-app.use(express.json());
-app.use(cors());
-
-// STATIC FOLDER SETUP (For Profile Images)
-const __dirname = path.resolve();
-app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
-
-// 🚀 Register Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/notifications", notificationRoutes);
-
-// Root Route
-app.get("/", (req, res) => {
-    res.send("ShopVerse API is running... 🚀");
+// ⚡ Socket.io Real-time Channel (Police-Grade Streaming)
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*', // Allow all for development flexibility
+    methods: ['GET', 'POST']
+  }
 });
 
-// Server start
+app.use(cors());
+app.use(express.json());
+
+// 🚔 Apply Global Activity Tracker Intelligence
+app.use(trackActivity(io));
+
+// 🛡️ API Endpoints
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+httpServer.listen(PORT, () => {
+  console.log(`🏰 ShopVerse Command Center: Real-time Registry Active on Port ${PORT}`);
+});
+
+// 🔒 Digital Handshake Verification
+io.on('connection', (socket) => {
+  console.log('💂‍♂️ Guard Connected: New Surveillance Stream Active.');
+  
+  socket.on('disconnect', () => {
+    console.log('💂‍♂️ Guard Disconnected: Stream Terminated.');
+  });
 });

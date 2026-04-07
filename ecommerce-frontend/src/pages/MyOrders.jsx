@@ -1,49 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Package, Truck, CheckCircle, Clock, ChevronRight, ShoppingBag, Plus, RefreshCcw } from 'lucide-react';
 import PageTemplate from './PageTemplate';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchMyOrders, createOrder } from '../redux/slices/orderSlice';
 import OrderDetailModal from '../components/Orders/OrderDetailModal';
 import toast from 'react-hot-toast';
 
 const MyOrders = ({ isTab = false }) => {
+  const dispatch = useDispatch();
   const { user, token } = useSelector((state) => state.auth);
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { orders, isLoading, error } = useSelector((state) => state.orders);
+  
+  const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch orders from backend
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:5000/api/orders/myorders', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setOrders(data);
-      } else {
-        toast.error(data.message || 'Failed to fetch orders');
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('Network error. Check backend server.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (token) {
-      fetchOrders();
+      dispatch(fetchMyOrders());
     }
-  }, [token]);
+  }, [dispatch, token]);
 
   // Function to generate a mock order for testing
-  const createMockOrder = async () => {
+  const handleCreateMockOrder = async () => {
     const mockOrder = {
       orderItems: [
         {
@@ -74,23 +55,14 @@ const MyOrders = ({ isTab = false }) => {
       totalPrice: 19900,
     };
 
-    try {
-      const response = await fetch('http://localhost:5000/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(mockOrder),
-      });
-
-      if (response.ok) {
+    dispatch(createOrder(mockOrder)).then((result) => {
+      if (result.meta.requestStatus === 'fulfilled') {
         toast.success('Mock Order Generated! 🛒');
-        fetchOrders();
+        dispatch(fetchMyOrders());
+      } else {
+        toast.error('Failed to create order');
       }
-    } catch (error) {
-      toast.error('Failed to create mock order');
-    }
+    });
   };
 
   const getStatusColor = (status) => {
@@ -112,8 +84,7 @@ const MyOrders = ({ isTab = false }) => {
   };
 
   const handleOrderClick = (order) => {
-    setSelectedOrder(order);
-    setIsModalOpen(true);
+    navigate(`/order/${order._id || order.id}`);
   };
 
   const OrdersContent = (
@@ -122,13 +93,13 @@ const MyOrders = ({ isTab = false }) => {
       {!isTab && (
         <div className="mb-8 flex gap-4">
           <button
-            onClick={createMockOrder}
+            onClick={handleCreateMockOrder}
             className="flex items-center gap-3 bg-zinc-950 text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-purple-600 transition-all shadow-xl active:scale-95"
           >
             Generate Mock Order <Plus size={14} />
           </button>
           <button
-            onClick={fetchOrders}
+            onClick={() => dispatch(fetchMyOrders())}
             className="w-12 h-12 bg-white border border-zinc-100 rounded-2xl flex items-center justify-center text-zinc-400 hover:text-purple-600 hover:border-purple-200 transition-all active:rotate-180 duration-500"
           >
             <RefreshCcw size={18} />
@@ -136,7 +107,7 @@ const MyOrders = ({ isTab = false }) => {
         </div>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <div className="py-20 text-center flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Retrieving Treasury...</p>
@@ -160,7 +131,10 @@ const MyOrders = ({ isTab = false }) => {
                     {getStatusIcon(order.status)} {order.status}
                   </div>
                 </div>
-                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight italic">PLACED ON {new Date(order.createdAt).toLocaleDateString()}</p>
+                <p className="text-[10px] text-zinc-400 font-black uppercase tracking-widest italic mb-1">Treasury Date</p>
+                <p className="text-[11px] text-purple-600 font-black uppercase tracking-tighter italic">
+                  {new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' })}
+                </p>
               </div>
             </div>
 

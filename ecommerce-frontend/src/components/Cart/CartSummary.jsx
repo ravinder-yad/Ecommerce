@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CreditCard, Tag, Truck, ShieldCheck, ArrowRight, Notebook } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 const CartSummary = () => {
-  const { cartTotal } = useApp();
+  const { cartItems } = useSelector((state) => state.cart);
   const [coupon, setCoupon] = useState('');
   const [showNote, setShowNote] = useState(false);
   
-  const shipping = cartTotal > 5000 ? 0 : 250;
+  const cartTotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
+  const shipping = cartTotal > 5000 || cartTotal === 0 ? 0 : 250;
   const tax = cartTotal * 0.12; // 12% Luxury Tax
   const finalTotal = cartTotal + shipping + tax;
 

@@ -1,15 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ProductCard from '../ProductCard';
 import { motion } from 'framer-motion';
-
-const products = [
-  { id: 1, name: 'Premium Leather Watch', category: 'Watches', price: 12999, oldPrice: 15999, image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=1999&auto=format&fit=crop', isNew: true, discount: 20 },
-  { id: 2, name: 'Ultra Noise-Cancel Headphones', category: 'Audio', price: 24999, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop', isNew: false, discount: 15 },
-  { id: 3, name: 'Signature Scent No. 5', category: 'Luxury', price: 8999, image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=2008&auto=format&fit=crop', isNew: true, discount: null },
-  { id: 4, name: 'Minimalist Tech Backpack', category: 'Bags', price: 4499, oldPrice: 5999, image: 'https://images.unsplash.com/photo-1553062407-98eeb94c6a62?q=80&w=1887&auto=format&fit=crop', isNew: false, discount: 25 },
-];
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProducts } from '../../redux/slices/productSlice';
 
 const FeaturedProducts = () => {
+  const dispatch = useDispatch();
+  const { products, isLoading } = useSelector((state) => state.products);
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
+
+  // Take the first 4 products for the featured section
+  const featured = products.slice(0, 4);
+
+  if (isLoading && products.length === 0) return null;
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-8 md:px-16 text-left">
@@ -25,8 +31,8 @@ const FeaturedProducts = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {featured.map((product) => (
+            <ProductCard key={product._id || product.id} product={product} />
           ))}
         </div>
         

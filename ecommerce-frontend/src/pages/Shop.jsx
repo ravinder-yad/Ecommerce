@@ -6,22 +6,21 @@ import Pagination from '../components/Shop/Pagination';
 import QuickViewModal from '../components/Shop/QuickViewModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MOCK_PRODUCTS = [
-  { id: 1, name: 'Premium Leather Watch', category: 'Watches', price: 12999, oldPrice: 15999, image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=1999&auto=format&fit=crop', isNew: true, discount: 20 },
-  { id: 2, name: 'Ultra Noise-Cancel Headphones', category: 'Audio', price: 24999, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop', isNew: false, discount: 15 },
-  { id: 3, name: 'Signature Scent No. 5', category: 'Luxury', price: 8999, image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=2008&auto=format&fit=crop', isNew: true, discount: null },
-  { id: 4, name: 'Minimalist Tech Backpack', category: 'Bags', price: 4499, oldPrice: 5999, image: 'https://images.unsplash.com/photo-1581605405669-fcdf81165afa?q=80&w=1887&auto=format&fit=crop', isNew: false, discount: 25 },
-  { id: 5, name: 'Crystal Luxury Sunglasses', category: 'Accessories', price: 5499, oldPrice: 9999, image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=2080&auto=format&fit=crop', isNew: false, discount: 45 },
-  { id: 6, name: 'Silk Business Suit', category: 'Fashion', price: 18999, oldPrice: 25999, image: 'https://images.unsplash.com/photo-1593032465175-481ac7f401a0?q=80&w=2080&auto=format&fit=crop', isNew: true, discount: 30 },
-  { id: 7, name: 'Smart Fitness Band X', category: 'Electronics', price: 2999, image: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?q=80&w=2070&auto=format&fit=crop', isNew: true, discount: 10 },
-  { id: 8, name: 'Elite Running Shoes', category: 'Shoes', price: 7499, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop', isNew: false, discount: null },
-];
+import { useSelector, useDispatch } from 'react-redux';
+import { useEffect } from 'react';
+import { fetchProducts } from '../redux/slices/productSlice';
 
 const Shop = () => {
+  const dispatch = useDispatch();
+  const { products, isLoading } = useSelector((state) => state.products);
   const [view, setView] = useState('grid');
   const [filters, setFilters] = useState({ priceRange: [0, 50000] });
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
   const handleQuickView = (product) => {
     setQuickViewProduct(product);
@@ -51,7 +50,7 @@ const Shop = () => {
           <div className="flex-grow">
             
             {/* Sort & Controls Bar */}
-            <SortBar totalProducts={MOCK_PRODUCTS.length} view={view} setView={setView} />
+            <SortBar totalProducts={products.length} view={view} setView={setView} />
 
             {/* Product Rendering Grid */}
             <div className={`grid gap-8 ${
@@ -60,9 +59,9 @@ const Shop = () => {
               : 'grid-cols-1'
             }`}>
               <AnimatePresence>
-                {MOCK_PRODUCTS.map((product) => (
+                {products.map((product) => (
                   <ProductCard 
-                    key={product.id} 
+                    key={product._id || product.id} 
                     product={product} 
                     onQuickView={handleQuickView}
                   />

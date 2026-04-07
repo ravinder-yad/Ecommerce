@@ -1,14 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaHeart, FaStar, FaShoppingBag, FaEye } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { FaHeart, FaStar, FaShoppingBag, FaEye, FaTrash } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { addItem } from '../redux/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice';
+import { deleteProduct } from '../redux/slices/productSlice';
 
 const ProductCard = ({ product, onQuickView }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { wishlistItems } = useSelector((state) => state.wishlist);
   
   const isWishlisted = wishlistItems.some(item => (item._id || item.id) === (product._id || product.id));
@@ -26,6 +28,7 @@ const ProductCard = ({ product, onQuickView }) => {
     toast.success(`${product.name} added to bag!`, {
       style: { borderRadius: '12px', background: '#18181b', color: '#fff' }
     });
+    navigate('/cart');
   };
 
   const handleToggleWishlist = (e) => {
@@ -41,10 +44,19 @@ const ProductCard = ({ product, onQuickView }) => {
     }
   };
 
-  const handleQuickView = (e) => {
+   const handleQuickView = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (onQuickView) onQuickView(product);
+  };
+
+  const handleDeleteProduct = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.confirm('Purge this selection from Treasury?')) {
+      dispatch(deleteProduct(product._id || product.id));
+      toast.success('Purged successfully', { icon: '🗑️' });
+    }
   };
 
   return (
@@ -83,6 +95,12 @@ const ProductCard = ({ product, onQuickView }) => {
            >
              <FaEye size={14} />
            </button>
+           <button 
+             onClick={handleDeleteProduct}
+             className="bg-white p-3 rounded-full text-zinc-400 hover:text-rose-600 hover:bg-white transition-all shadow-md active:scale-90"
+           >
+             <FaTrash size={14} />
+           </button>
         </div>
 
         {/* Quick Add Overlay */}
@@ -109,7 +127,7 @@ const ProductCard = ({ product, onQuickView }) => {
              <span className="text-[10px] font-bold text-zinc-400">4.9</span>
            </div>
         </div>
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${product._id || product.id}`}>
           <h3 className="text-base font-black text-zinc-900 tracking-tight leading-tight uppercase group-hover:text-purple-600 transition-colors mb-4 truncate italic leading-tight">
             {product.name}
           </h3>

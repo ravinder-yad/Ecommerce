@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import MyOrders from './pages/MyOrders';
+import OrderDetails from './pages/OrderDetails';
 import Wishlist from './pages/Wishlist';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
@@ -52,6 +53,7 @@ function App() {
           <Route path="signup" element={<Signup />} />
           <Route path="profile" element={<Profile />} />
           <Route path="orders" element={<MyOrders />} />
+          <Route path="order/:id" element={<OrderDetails />} />
           <Route path="wishlist" element={<Wishlist />} />
           
           <Route path="dashboard" element={<Dashboard />} />
